@@ -1,0 +1,259 @@
+USE [ApiDemo]
+GO
+/****** Object:  StoredProcedure [dbo].[spDeleteStudentData]    Script Date: 3/12/2024 10:44:17 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spDeleteStudentData]
+    @student_id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Deleting data from the Student_University table
+        DELETE FROM Student_University WHERE student_id = @student_id;
+
+        -- Deleting data from the Student_Qualification table
+        DELETE FROM Student_Qualification WHERE student_id = @student_id;
+
+        -- Deleting data from the Student table
+        DELETE FROM Student WHERE student_id = @student_id;
+
+        SELECT 'Success' AS ResponseName;
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ResponseName;
+    END CATCH;
+END;
+
+
+
+
+
+USE [ApiDemo]
+GO
+/****** Object:  StoredProcedure [dbo].[spGetAllStudents]    Script Date: 3/12/2024 10:44:38 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spGetAllStudents]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Selecting specific columns from the Student table and joining with related tables
+        SELECT 
+            s.student_id, s.first_name, s.last_name, s.date_of_birth, s.gender, s.address, s.city, s.state, s.zipcode, s.country, 
+            s.email, s.phone_number, sq.qualification, sq.year_of_completion, su.university_name, su.degree, su.field_of_study, su.year_of_graduation
+        FROM 
+            Student s
+        INNER JOIN 
+            Student_Qualification sq ON s.student_id = sq.student_id
+        INNER JOIN 
+            Student_University su ON s.student_id = su.student_id;
+
+        SELECT 'Success' AS ResponseName;
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ResponseName;
+    END CATCH;
+END;
+
+
+
+/*
+EXEC spGetAllStudents;
+DROP PROCEDURE spGetAllStudents;
+
+*/
+
+
+
+
+USE [ApiDemo]
+GO
+/****** Object:  StoredProcedure [dbo].[spGetStudentById]    Script Date: 3/12/2024 10:45:13 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spGetStudentById]
+    @student_id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Selecting specific columns from the Student table and related tables based on student_id
+        SELECT 
+            s.student_id, s.first_name, s.last_name, s.date_of_birth, s.gender, s.address, s.city, s.state, s.zipcode, s.country, 
+            s.email, s.phone_number, sq.qualification, sq.year_of_completion, su.university_name, su.degree, su.field_of_study, su.year_of_graduation
+        FROM 
+            Student s
+        INNER JOIN 
+            Student_Qualification sq ON s.student_id = sq.student_id
+        INNER JOIN 
+            Student_University su ON s.student_id = su.student_id
+        WHERE 
+            s.student_id = @student_id;
+
+        SELECT 'Success' AS ResponseName;
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ResponseName;
+    END CATCH;
+END;
+
+
+
+USE [ApiDemo]
+GO
+/****** Object:  StoredProcedure [dbo].[spInsertStudentData]    Script Date: 3/12/2024 10:45:25 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spInsertStudentData]
+    @first_name VARCHAR(50),
+    @last_name VARCHAR(50),
+    @date_of_birth DATE,
+    @gender VARCHAR(10),
+    @address VARCHAR(255),
+    @city VARCHAR(100),
+    @state VARCHAR(100),
+    @zipcode VARCHAR(20),
+    @country VARCHAR(100),
+    @email VARCHAR(100),
+    @phone_number VARCHAR(20),
+    @qualification VARCHAR(100),
+    @year_of_completion INT,
+    @university_name VARCHAR(100),
+    @degree VARCHAR(100),
+    @field_of_study VARCHAR(100),
+    @year_of_graduation INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Inserting data into the Student table
+        INSERT INTO Student (first_name, last_name, date_of_birth, gender, address, city, state, zipcode, country, email, phone_number)
+        VALUES (@first_name, @last_name, @date_of_birth, @gender, @address, @city, @state, @zipcode, @country, @email, @phone_number);
+
+        -- Getting the newly inserted student's ID
+        DECLARE @student_id INT;
+        SET @student_id = SCOPE_IDENTITY();
+
+        -- Inserting data into the Student_Qualification table
+        INSERT INTO Student_Qualification (student_id, qualification, year_of_completion)
+        VALUES (@student_id, @qualification, @year_of_completion);
+
+        -- Inserting data into the Student_University table
+        INSERT INTO Student_University (student_id, university_name, degree, field_of_study, year_of_graduation)
+        VALUES (@student_id, @university_name, @degree, @field_of_study, @year_of_graduation);
+
+        SELECT 'Success' AS ResponseName;
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ResponseName;
+    END CATCH;
+END;
+
+
+USE [ApiDemo]
+GO
+/****** Object:  StoredProcedure [dbo].[spUpdateStudentData]    Script Date: 3/12/2024 10:45:38 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spUpdateStudentData]
+    @student_id INT,
+    @first_name VARCHAR(50),
+    @last_name VARCHAR(50),
+    @date_of_birth DATE,
+    @gender VARCHAR(10),
+    @address VARCHAR(255),
+    @city VARCHAR(100),
+    @state VARCHAR(100),
+    @zipcode VARCHAR(20),
+    @country VARCHAR(100),
+    @email VARCHAR(100),
+    @phone_number VARCHAR(20),
+    @qualification VARCHAR(100),
+    @year_of_completion INT,
+    @university_name VARCHAR(100),
+    @degree VARCHAR(100),
+    @field_of_study VARCHAR(100),
+    @year_of_graduation INT
+AS
+/*EXEC spUpdateStudentData
+    @student_id = 1,
+    @first_name = 'UpdatedFirstName',
+    @last_name = 'UpdatedLastName',
+    @date_of_birth = '1998-05-15',
+    @gender = 'Female',
+    @address = 'Updated Address',
+    @city = 'Updated City',
+    @state = 'Updated State',
+    @zipcode = '123456',
+    @country = 'Updated Country',
+    @email = 'updated_email@email.com',
+    @phone_number = '123-456-7890',
+    @qualification = 'Updated Qualification',
+    @year_of_completion = 2025,
+    @university_name = 'Updated University',
+    @degree = 'Updated Degree',
+    @field_of_study = 'Updated Field',
+    @year_of_graduation = 2026;
+*/
+
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Updating data in the Student table
+        UPDATE Student
+        SET 
+            first_name = @first_name,
+            last_name = @last_name,
+            date_of_birth = @date_of_birth,
+            gender = @gender,
+            address = @address,
+            city = @city,
+            state = @state,
+            zipcode = @zipcode,
+            country = @country,
+            email = @email,
+            phone_number = @phone_number
+        WHERE
+            student_id = @student_id;
+
+        -- Updating data in the Student_Qualification table
+        UPDATE Student_Qualification
+        SET
+            qualification = @qualification,
+            year_of_completion = @year_of_completion
+        WHERE
+            student_id = @student_id;
+
+        -- Updating data in the Student_University table
+        UPDATE Student_University
+        SET
+            university_name = @university_name,
+            degree = @degree,
+            field_of_study = @field_of_study,
+            year_of_graduation = @year_of_graduation
+        WHERE
+            student_id = @student_id;
+
+        SELECT 'Success' AS ResponseName;
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ResponseName;
+    END CATCH;
+END;

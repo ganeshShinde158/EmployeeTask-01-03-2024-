@@ -1,0 +1,49 @@
+﻿@model EmployeeModel
+
+
+<form asp-action="AddEmployee" method="post">
+    <div class="form-group">
+        <label for="FirstName">First Name</label>
+        <input type="text" class="form-control" id="FirstName" name="FirstName" required>
+    </div>
+
+    <div class="form-group">
+        <label for="Last Name">Last Name</label>
+        <input type="text" class="form-control" id="LastName" name="LastName" required>
+    </div>
+
+    <div class="form-group">
+        <label for="DateTime">Date Of Joining</label>
+        <input type="datetime" class="form-control" id="da" name="Date Of joining" required>
+    </div>
+
+    <div class="form-group">
+        <label for="Age">Age</label>
+        <input type="text" class="form-control" id="Age" name="Age" required>
+    </div>
+
+    <div class="form-group">
+        <label for="City">City:</label>
+        <select class="form-control" id="City" name="City">
+            <option value="">Select City</option>
+            @foreach (var city in ViewBag.Cities)
+            {
+                <option value="@city.CityId">@city.CityName</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="Department">Department:</label>
+        <select class="form-control" id="Department" name="Department">
+            <option value="">Select Department</option>
+            @foreach (var Department in ViewBag.Department)
+            {
+                <option value="@Department.DepartmentID">@Department.DepartmentName</option>
+            }
+        </select>
+    </div>
+    
+    <br />
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

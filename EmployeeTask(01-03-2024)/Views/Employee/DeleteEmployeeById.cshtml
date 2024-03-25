@@ -1,0 +1,25 @@
+﻿@model EmployeeModel
+
+<h1>Delete Employee</h1>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">First Name:</dt>
+        <dd class="col-sm-9">@Model.FirstName</dd>
+
+        <dt class="col-sm-3">Last Name:</dt>
+        <dd class="col-sm-9">@Model.LastName</dd>
+
+        <dt class="col-sm-3">City:</dt>
+        <dd class="col-sm-9">@Model.City</dd>
+
+        <dt class="col-sm-3">Department:</dt>
+        <dd class="col-sm-9">@Model.Department</dd>
+    </dl>
+</div>
+
+<form asp-action="DeleteEmployee" method="post">
+    <input type="hidden" asp-for="EmployeeID" />
+
+    <button type="submit" class="btn btn-danger">Delete</button>
+</form>

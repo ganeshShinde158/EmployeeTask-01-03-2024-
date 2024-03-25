@@ -1,0 +1,559 @@
+USE [Employee]
+GO
+
+/****** Object:  Table [dbo].[City]    Script Date: 3/12/2024 10:51:44 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[City](
+	[CityId] [int] NULL,
+	[CityName] [varchar](50) NULL
+) ON [PRIMARY]
+GO
+
+
+
+
+
+USE [Employee]
+GO
+
+/****** Object:  Table [dbo].[Department]    Script Date: 3/12/2024 10:52:10 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Department](
+	[DepartmentID] [int] NULL,
+	[DepartmentName] [varchar](50) NULL
+) ON [PRIMARY]
+GO
+
+
+USE [Employee]
+GO
+
+/****** Object:  Table [dbo].[EmployeeMaster]    Script Date: 3/12/2024 10:52:27 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[EmployeeMaster](
+	[EmployeeID] [int] IDENTITY(1,1) NOT NULL,
+	[FirstName] [varchar](50) NULL,
+	[LastName] [varchar](50) NULL,
+	[City] [varchar](50) NULL,
+	[Age] [int] NULL,
+	[DOJ] [datetime] NULL,
+	[Department] [varchar](50) NULL,
+	[UserName] [varchar](50) NULL,
+	[Password] [varchar](50) NULL,
+	[AuthToken] [nvarchar](50) NULL
+) ON [PRIMARY]
+GO
+
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteEmployee]    Script Date: 3/12/2024 10:52:52 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[DeleteEmployee]
+    @EmployeeID INT,
+    @ResponseCode INT OUTPUT,
+    @ResponseMsg VARCHAR(255) OUTPUT
+AS
+
+/*
+
+DECLARE @ResponseCode INT;
+DECLARE @ResponseMsg VARCHAR(255);
+
+EXEC DeleteEmployee
+    @EmployeeID = 4,
+    @ResponseCode = @ResponseCode OUTPUT,
+    @ResponseMsg = @ResponseMsg OUTPUT;
+
+SELECT @ResponseCode AS ResponseCode, @ResponseMsg AS ResponseMessage;
+
+*/
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM EmployeeMaster WHERE EmployeeID = @EmployeeID)
+    BEGIN
+        DELETE FROM EmployeeMaster WHERE EmployeeID = @EmployeeID;
+        SET @ResponseCode = 00;
+        SET @ResponseMsg = 'Employee deleted successfully.';
+
+		IF NOT EXISTS (select 1 FROM EmployeeMaster WHERE EmployeeID = @EmployeeID)
+		select FirstName, LastName, City, Department from EmployeeMaster
+    END
+    ELSE
+    BEGIN
+        SET @ResponseCode = 01; 
+        SET @ResponseMsg = 'Employee not found.';
+    END
+END
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[GenerateAuthToken]    Script Date: 3/12/2024 10:53:03 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GenerateAuthToken]
+    @EmployeeId INT
+AS
+
+--Exec GenerateAuthToken @EmployeeId = 1
+
+
+BEGIN
+    DECLARE @Token NVARCHAR(100)
+    SET @Token = CAST(NEWID() AS NVARCHAR(100))
+
+    UPDATE EmployeeMaster
+    SET AuthToken = @Token
+    WHERE EmployeeID = @EmployeeId;
+
+    SELECT @Token AS AuthToken;
+END
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[GetAllEmployees]    Script Date: 3/12/2024 10:53:15 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[GetAllEmployees]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT [EmployeeID], [FirstName], [LastName], [City], [Age], [DOJ], [Department]
+    FROM [dbo].[EmployeeMaster];
+END
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[GetCities]    Script Date: 3/12/2024 10:53:27 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetCities]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT CityId, CityName
+    FROM City;
+END;
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[GetDepartment]    Script Date: 3/12/2024 10:53:37 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetDepartment]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT DepartmentID, DepartmentName
+    FROM Department;
+END;
+
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[GetEmployeeById]    Script Date: 3/12/2024 10:53:46 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[GetEmployeeById]
+    @EmployeeID int
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM EmployeeMaster WHERE EmployeeID = @EmployeeID)
+    BEGIN
+        SELECT [EmployeeID], [FirstName], [LastName], [City], [Age], [DOJ], [Department]
+        FROM [dbo].[EmployeeMaster]
+        WHERE EmployeeID = @EmployeeID;
+    END
+    ELSE
+    BEGIN
+        SELECT NULL AS [EmployeeID], NULL AS [FirstName], NULL AS [LastName], NULL AS [City], NULL AS [Age], NULL AS [DOJ], NULL AS [Department];
+    END
+END
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[GetEmployeesByDepartment]    Script Date: 3/12/2024 10:53:55 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetEmployeesByDepartment]
+    @DepartmentName VARCHAR(50),
+    @ResponseCode INT OUTPUT,
+    @ResponseMsg VARCHAR(255) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM Department WHERE DepartmentName = @DepartmentName)
+    BEGIN
+        SET @ResponseCode = 02; 
+        SET @ResponseMsg = 'Department does not exist.';
+        RETURN;
+    END
+
+    BEGIN TRY
+        SELECT EmployeeID, FirstName, LastName, City, Age, DOJ, Department
+        FROM EmployeeMaster
+        WHERE Department = @DepartmentName;
+
+        SET @ResponseCode = 00; 
+        SET @ResponseMsg = 'Data retrieved successfully.';
+    END TRY
+    BEGIN CATCH
+        SET @ResponseCode = 01; 
+        SET @ResponseMsg = ERROR_MESSAGE(); 
+    END CATCH;
+END;
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[InsertEmployee]    Script Date: 3/12/2024 10:54:05 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[InsertEmployee]
+    @FirstName VARCHAR(50),
+    @LastName VARCHAR(50),
+    @City VARCHAR(50),
+    @Age INT,
+    @DOJ DATETIME,
+    @Department VARCHAR(50),
+    @ResponseCode INT OUTPUT,
+    @ResponseMsg VARCHAR(255) OUTPUT
+AS
+
+/*
+
+DECLARE @ResponseCode INT;
+DECLARE @ResponseMsg VARCHAR(255);
+
+EXEC InsertEmployee 
+    @FirstName = 'Pram',
+    @LastName = 'Shashtri',
+    @City = 'Pune',
+    @Age = 30,
+    @DOJ = '2024-03-01',
+    @Department = 'HR',
+    @ResponseCode = @ResponseCode OUTPUT,
+    @ResponseMsg = @ResponseMsg OUTPUT;
+
+SELECT @ResponseCode AS ResponseCode, @ResponseMsg AS ResponseMessage;
+
+select * from EmployeeMaster
+*/
+
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @DepartmentID INT
+    DECLARE @CityID INT
+
+    SELECT @DepartmentID = DepartmentID FROM Department WHERE DepartmentName = @Department;
+
+    SELECT @CityID = CityID FROM City WHERE CityName = @City;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        INSERT INTO EmployeeMaster (FirstName, LastName, City, Age, DOJ, Department)
+        VALUES (@FirstName, @LastName, @City, @Age, @DOJ, @Department);
+
+        --IF (@@ERROR <> 0 OR @DepartmentID IS NULL OR @CityID IS NULL)
+        --BEGIN
+        --    ROLLBACK;
+        --    SET @ResponseCode = 01;
+        --    SET @ResponseMsg = 'Error inserting into EmployeeMaster';
+        --    RETURN;
+        --END
+
+        COMMIT;
+        SET @ResponseCode = 00; 
+        SET @ResponseMsg = 'Employee inserted successfully';
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK;
+        SET @ResponseCode = 01; 
+        SET @ResponseMsg = ERROR_MESSAGE(); 
+    END CATCH;
+END
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[InsertEmployeeData]    Script Date: 3/12/2024 10:54:15 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[InsertEmployeeData]
+    @FirstName varchar(50),
+    @LastName varchar(50),
+    @CityId int,
+    @Age int,
+    @DOJ datetime,
+    @DepartmentId int,
+    @ResponseCode int OUTPUT,
+    @ResponseMessage varchar(255) OUTPUT
+AS
+
+/*
+
+DECLARE @ResponseCode INT;
+DECLARE @ResponseMsg VARCHAR(255);
+
+EXEC InsertEmployee 
+    EXEC InsertEmployeeData 
+    @FirstName = 'Sama', 
+    @LastName = 'Jeju', 
+    @CityId = 1, 
+    @Age = 30, 
+    @DOJ = '2024-03-02', 
+    @DepartmentId = 1, 
+    @ResponseCode = @ResponseCode OUTPUT, 
+    @ResponseMessage = @ResponseMsg OUTPUT
+
+SELECT @ResponseCode AS ResponseCode, @ResponseMsg AS ResponseMessage;
+
+*/
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @CityName varchar(50)
+    DECLARE @DepartmentName varchar(50)
+
+    SELECT @CityName = CityName FROM City WHERE CityId = @CityId
+
+    SELECT @DepartmentName = DepartmentName FROM Department WHERE DepartmentID = @DepartmentId
+
+    IF @CityName IS NOT NULL AND @DepartmentName IS NOT NULL
+    BEGIN
+        INSERT INTO EmployeeMaster (FirstName, LastName, City, Age, DOJ, Department)
+        VALUES (@FirstName, @LastName, @CityName, @Age, @DOJ, @DepartmentName)
+
+        SET @ResponseCode = 00
+        SET @ResponseMessage = 'Employee data inserted successfully.'
+    END
+    ELSE
+    BEGIN
+        SET @ResponseCode = 01
+        SET @ResponseMessage = 'Invalid City Name or Department Name provided.'
+    END
+END
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[Logout]    Script Date: 3/12/2024 10:54:24 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[Logout]
+    @EmployeeId INT,
+    @AuthToken NVARCHAR(100),
+    @ResponseCode INT OUT,
+    @ResponseMsg NVARCHAR(100) OUT
+AS
+BEGIN
+    DECLARE @ExistingAuthToken NVARCHAR(100);
+
+    SELECT @ExistingAuthToken = AuthToken
+    FROM EmployeeMaster
+    WHERE EmployeeID = @EmployeeId;
+
+    IF @ExistingAuthToken IS NULL
+    BEGIN
+        SET @ResponseCode = 01;
+        SET @ResponseMsg = 'User not found';
+        RETURN;
+    END
+
+    IF @ExistingAuthToken <> @AuthToken
+    BEGIN
+        SET @ResponseCode = 02;
+        SET @ResponseMsg = 'Invalid authentication token';
+        RETURN;
+    END
+
+    UPDATE EmployeeMaster
+    SET AuthToken = NULL
+    WHERE EmployeeID = @EmployeeId;
+
+    SET @ResponseCode = 00;
+    SET @ResponseMsg = 'Logout successful';
+END
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateEmployee]    Script Date: 3/12/2024 10:54:34 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[UpdateEmployee]
+    @EmployeeID INT,
+    @FirstName VARCHAR(50),
+    @LastName VARCHAR(50),
+    @City VARCHAR(50),
+    @Age INT,
+    @DOJ DATETIME,
+    @Department VARCHAR(50),
+    @ResponseCode INT OUTPUT,
+    @ResponseMsg VARCHAR(255) OUTPUT
+AS
+
+/*
+
+DECLARE @ResponseCode INT;
+DECLARE @ResponseMsg VARCHAR(255);
+
+EXEC UpdateEmployee
+	@EmployeeID = 1
+    @FirstName = 'Param',
+    @LastName = 'Shashtri',
+    @City = 'Pune',
+    @Age = 30,
+    @DOJ = '2024-03-01',
+    @Department = 'HR',
+    @ResponseCode = @ResponseCode OUTPUT,
+    @ResponseMsg = @ResponseMsg OUTPUT;
+
+SELECT @ResponseCode AS ResponseCode, @ResponseMsg AS ResponseMessage;
+
+select * from EmployeeMaster
+
+*/
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM EmployeeMaster WHERE EmployeeID = @EmployeeID)
+    BEGIN
+        SET @ResponseCode = 02;
+        SET @ResponseMsg = 'Employee does not exist.';
+        RETURN;
+    END
+
+    BEGIN TRY
+        UPDATE EmployeeMaster
+        SET FirstName = @FirstName,
+            LastName = @LastName,
+            City = @City,
+            Age = @Age,
+            DOJ = @DOJ,
+            Department = @Department
+        WHERE EmployeeID = @EmployeeID;
+
+        SET @ResponseCode = 00; 
+        SET @ResponseMsg = 'Employee updated successfully.';
+    END TRY
+    BEGIN CATCH
+        SET @ResponseCode = 01; 
+        SET @ResponseMsg = ERROR_MESSAGE(); 
+    END CATCH;
+END;
+
+
+
+USE [Employee]
+GO
+/****** Object:  StoredProcedure [dbo].[ValidateLogin]    Script Date: 3/12/2024 10:54:43 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[ValidateLogin]
+    @Username NVARCHAR(50),
+    @Password NVARCHAR(50),
+    @EmployeeId INT OUT,
+    @AuthToken NVARCHAR(100) OUT,
+    @ResponseCode INT OUT,
+    @ResponseMsg NVARCHAR(100) OUT
+AS
+BEGIN
+    DECLARE @StoredPassword NVARCHAR(100);
+
+    SELECT @EmployeeId = EmployeeID, @StoredPassword = Password
+    FROM EmployeeMaster
+    WHERE Username = @Username;
+
+    IF @EmployeeId IS NULL
+    BEGIN
+        SET @ResponseCode = 01; 
+        SET @ResponseMsg = 'Invalid username';
+        RETURN;
+    END
+
+    IF @StoredPassword <> @Password 
+    BEGIN
+        SET @ResponseCode = 01; 
+        SET @ResponseMsg = 'Invalid password';
+        RETURN;
+    END
+
+    SET @AuthToken = CAST(NEWID() AS NVARCHAR(100));
+
+    UPDATE EmployeeMaster
+    SET AuthToken = @AuthToken
+    WHERE EmployeeID = @EmployeeId;
+
+    SET @ResponseCode = 00; 
+    SET @ResponseMsg = 'Authentication token generated successfully';
+END
